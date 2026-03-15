@@ -1,216 +1,109 @@
 # Inventory Management Backend
 
-Inventory Management Backend is a Spring Boot 3 REST API for managing products, inventory records, and sales. It uses Java 17, Spring Data JPA, MySQL, and Spring Security.
+Inventory Management Backend is a Spring Boot REST API for managing products, stock levels, sales, and stock movement history.
+
+It is designed to support inventory workflows that need more than simple CRUD. The API handles product records, live inventory state, sales deductions, restocks, and audit-friendly stock movement tracking in one backend service.
+
+## What This Backend Does
+
+The backend provides the core server-side logic for:
+
+- product management
+- inventory tracking
+- sale recording
+- stock deduction
+- restock operations
+- low-stock and out-of-stock visibility
+- movement history for inventory auditing
+- local development support through H2 and MySQL
+
+It is suitable as both a practical backend project and a full-stack foundation for an inventory dashboard.
+
+## How The Backend Helps
+
+This backend helps by making inventory behavior consistent and enforceable.
+
+It:
+
+- prevents overselling
+- centralizes stock rules in one place
+- keeps product and inventory data linked cleanly
+- exposes filtered and paginated endpoints for frontend consumption
+- records stock movements so inventory changes can be explained later
+- supports both lightweight local development and MySQL-backed parity
 
 ## Tech Stack
 
 - Java 17
-- Spring Boot 3.3.4
+- Spring Boot 3
 - Spring Web
 - Spring Data JPA
 - Spring Security
 - MySQL
+- H2
 - Maven
+- Swagger / OpenAPI
 
-## Features
+## Core Features
 
-- Product CRUD APIs
-- Inventory CRUD APIs
-- Sales CRUD APIs
-- Global exception handling with JSON error responses
+- product CRUD APIs
+- inventory CRUD APIs
+- sales APIs
+- stock movement history APIs
+- health endpoint
+- pagination and filtering on list endpoints
 - HTTP Basic authentication for write operations
-- Environment-variable-based database configuration
-- Bean validation on incoming write requests
-- OpenAPI and Swagger UI documentation
-- Transactional sale creation with stock deduction
-- Oversell prevention with conflict responses
-- Dedicated inventory restock flow
-- Pagination and query-parameter filtering on list endpoints
-- Stock movement history for sales and restocks
-- Audit timestamps on primary entities
-- Service and controller test coverage for key behaviors
+- JSON error handling
+- bean validation for incoming write requests
+- transactional stock deduction during sales
+- restock workflow with movement logging
+- dev profile with seeded demo data
+- smoke-test script for local verification
 
-## Prerequisites
+## Functional Areas
 
-- Java 17 or later
-- MySQL running locally
-- Port `8080` available
+### Products
 
-## Environment Variables
+The products domain manages core catalog data such as:
 
-Set these before starting the application:
+- name
+- category
+- price
 
-```bash
-export DB_URL=jdbc:mysql://localhost:3306/inventory_management
-export DB_USERNAME=root
-export DB_PASSWORD=your_password
-export APP_SECURITY_USERNAME=admin
-export APP_SECURITY_PASSWORD=admin123
-export APP_CORS_ALLOWED_ORIGIN_PATTERNS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173
-```
+### Inventory
 
-Use your own local values. Do not commit real credentials.
+The inventory domain tracks the stock state attached to products.
 
-If a local `.env` file is present in the project root, Spring Boot now loads it automatically during startup.
+It supports:
 
-By default, browser requests are allowed from common local frontend origins on ports `3000` and `5173`. Override `APP_CORS_ALLOWED_ORIGIN_PATTERNS` if your frontend runs elsewhere.
+- current stock visibility
+- low-stock filtering
+- out-of-stock filtering
+- inventory creation
+- deletion of inventory records
 
-## Database Setup
+### Sales
 
-Create the database before starting the app:
+The sales domain records outgoing stock and ensures inventory levels update correctly.
 
-```sql
-CREATE DATABASE inventory_management;
-```
+It also protects the system from invalid sales such as trying to sell more units than are available.
 
-Hibernate is configured with `spring.jpa.hibernate.ddl-auto=update`, so tables are created and updated automatically on startup.
+### Stock Movements
 
-## Run the Application
+Stock movement history acts as an audit layer.
 
-```bash
-cd /Users/rupa_uppin/Documents/New\ project/Inventory_Management_backend
-sh ./mvnw spring-boot:run
-```
+It explains why stock changed by recording movement types such as:
 
-The API starts on `http://localhost:8080`.
+- sale
+- restock
 
-## Run MySQL With Docker
-
-To run the default MySQL-backed profile locally without installing MySQL directly:
-
-```bash
-cd /Users/rupa_uppin/Documents/New\ project/Inventory_Management_backend
-cp .env.example .env
-docker compose up -d
-```
-
-This starts MySQL 8 on `localhost:3306` with database `inventory_management`.
-
-Then start the backend with the default profile:
-
-```bash
-cd /Users/rupa_uppin/Documents/New\ project/Inventory_Management_backend
-export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
-export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
-export DB_URL=jdbc:mysql://localhost:3306/inventory_management
-export DB_USERNAME=root
-export DB_PASSWORD=your_password
-export APP_SECURITY_USERNAME=admin
-export APP_SECURITY_PASSWORD=admin123
-sh ./mvnw spring-boot:run
-```
-
-If `.env` exists, you can also just run:
-
-```bash
-cd /Users/rupa_uppin/Documents/New\ project/Inventory_Management_backend
-export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
-export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
-sh ./mvnw spring-boot:run
-```
-
-Or use the helper script after creating `.env`:
-
-```bash
-cd /Users/rupa_uppin/Documents/New\ project/Inventory_Management_backend
-sh ./run-mysql.sh
-```
-
-To stop the MySQL container:
-
-```bash
-cd /Users/rupa_uppin/Documents/New\ project/Inventory_Management_backend
-docker compose down
-```
-
-Or use:
-
-```bash
-cd /Users/rupa_uppin/Documents/New\ project/Inventory_Management_backend
-sh ./stop-mysql.sh
-```
-
-## Run Without MySQL
-
-For local development on a machine without MySQL, use the bundled `dev` profile backed by H2:
-
-```bash
-cd /Users/rupa_uppin/Documents/New\ project/Inventory_Management_backend
-sh ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-```
-
-Or use the helper script:
-
-```bash
-cd /Users/rupa_uppin/Documents/New\ project/Inventory_Management_backend
-sh ./run-dev.sh
-```
-
-This starts the API on `http://localhost:8080` with:
-
-- in-memory H2 database
-- default write credentials `admin` / `admin123`
-- H2 console at `http://localhost:8080/h2-console`
-- sample products, inventory, sales, and stock movement history loaded automatically on first start
-
-Use JDBC URL `jdbc:h2:mem:inventory_management_dev` in the H2 console.
-
-## Swagger / OpenAPI
-
-Interactive API documentation is available after startup at:
-
-- `http://localhost:8080/swagger-ui.html`
-- `http://localhost:8080/swagger-ui/index.html`
-
-The OpenAPI document is available at:
-
-- `http://localhost:8080/v3/api-docs`
-
-Basic health check:
-
-- `http://localhost:8080/api/health`
-
-## Run Tests
-
-```bash
-sh ./mvnw test
-```
-
-If you see `Unable to locate a Java Runtime`, install Java 17 and make sure `java -version` works in your terminal.
-
-## Smoke Test
-
-With the backend running, you can verify the main local flows with:
-
-```bash
-cd /Users/rupa_uppin/Documents/New\ project/Inventory_Management_backend
-sh ./smoke-test.sh
-```
-
-Optional environment overrides:
-
-```bash
-BASE_URL=http://127.0.0.1:8080 \
-APP_SECURITY_USERNAME=admin \
-APP_SECURITY_PASSWORD=admin123 \
-sh ./smoke-test.sh
-```
-
-## Authentication
-
-- `GET /api/**` endpoints are public
-- `POST`, `PUT`, and `DELETE` endpoints require HTTP Basic authentication
-- Browser clients are allowed by default from `http://localhost:3000`, `http://127.0.0.1:3000`, `http://localhost:5173`, and `http://127.0.0.1:5173`
-
-Example authenticated request:
-
-```bash
-curl -u admin:admin123 http://localhost:8080/api/products
-```
-
-In Swagger UI, use the `Authorize` button and enter the configured HTTP Basic credentials for write endpoints.
+This makes the backend more useful than a simple inventory table because it preserves context around inventory changes.
 
 ## API Overview
+
+### Health
+
+- `GET /api/health`
 
 ### Products
 
@@ -240,26 +133,9 @@ In Swagger UI, use the `Authorize` button and enter the configured HTTP Basic cr
 
 - `GET /api/stock-movements`
 
-### Health
+## Response Shape
 
-- `GET /api/health`
-
-## Example API Calls
-
-Get all products:
-
-```bash
-curl http://localhost:8080/api/products
-```
-
-Get paged and filtered products:
-
-```bash
-curl "http://localhost:8080/api/products?page=0&size=10&category=Electronics&name=lap"
-```
-
-Paginated endpoints use `page=0` and `size=20` by default, and reject any `size` greater than `100`.
-List responses use a stable pagination envelope:
+List endpoints return a stable paginated structure:
 
 ```json
 {
@@ -271,117 +147,142 @@ List responses use a stable pagination envelope:
 }
 ```
 
-Default sorts are:
+This keeps frontend integrations predictable instead of depending on raw Spring page serialization.
 
-- products: `id,asc`
-- inventories: `id,asc`
-- low-stock inventories: `itemsLeft,asc`
-- out-of-stock inventories: `id,asc`
-- sales: `saleDate,desc`
-- stock movements: `occurredAt,desc`
+## Authentication
 
-Create a product:
+- `GET` endpoints are public
+- `POST`, `PUT`, and `DELETE` endpoints require HTTP Basic authentication
+
+Example:
 
 ```bash
-curl -X POST http://localhost:8080/api/products \
-  -u admin:admin123 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Laptop",
-    "category": "Electronics",
-    "price": 75000
-  }'
+curl -u admin:admin123 http://localhost:8080/api/products
 ```
 
-Create inventory:
+## CORS
+
+Local browser access is enabled by default for common frontend origins:
+
+- `http://localhost:3000`
+- `http://127.0.0.1:3000`
+- `http://localhost:5173`
+- `http://127.0.0.1:5173`
+
+This can be overridden with `APP_CORS_ALLOWED_ORIGIN_PATTERNS`.
+
+## Environment Variables
+
+Use these values for the default MySQL-backed profile:
 
 ```bash
-curl -X POST http://localhost:8080/api/inventories \
-  -u admin:admin123 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "productId": 1,
-    "initialStock": 20
-  }'
+export DB_URL=jdbc:mysql://localhost:3306/inventory_management
+export DB_USERNAME=root
+export DB_PASSWORD=your_password
+export APP_SECURITY_USERNAME=admin
+export APP_SECURITY_PASSWORD=admin123
+export APP_CORS_ALLOWED_ORIGIN_PATTERNS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173
 ```
 
-Restock inventory:
+If a `.env` file exists in the project root, Spring Boot loads it automatically.
+
+## Local Run Options
+
+### Option 1: Run With H2 Dev Profile
+
+This is the easiest local setup and does not require MySQL.
 
 ```bash
-curl -X POST http://localhost:8080/api/inventories/1/restock \
-  -u admin:admin123 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "quantity": 10,
-    "reason": "New shipment"
-  }'
+sh ./run-dev.sh
 ```
 
-Get paged inventory for one product:
+What you get:
+
+- in-memory H2 database
+- sample seeded products, inventory, sales, and stock movement history
+- default local credentials `admin` / `admin123`
+- H2 console at `http://localhost:8080/h2-console`
+
+### Option 2: Run With MySQL
+
+If you want parity with the default profile:
 
 ```bash
-curl "http://localhost:8080/api/inventories?page=0&size=10&productId=1"
+cp .env.example .env
+sh ./run-mysql.sh
 ```
 
-Get low-stock inventory:
+This uses Docker-backed MySQL if configured with the included compose setup.
+
+### Option 3: Run Directly With Maven
 
 ```bash
-curl "http://localhost:8080/api/inventories/low-stock?page=0&size=10&threshold=10"
+sh ./mvnw spring-boot:run
 ```
 
-Get out-of-stock inventory:
+Or for the H2 dev profile:
 
 ```bash
-curl "http://localhost:8080/api/inventories/out-of-stock?page=0&size=10"
+sh ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Create a sale:
+## Docker MySQL Setup
+
+To run the MySQL container manually:
 
 ```bash
-curl -X POST http://localhost:8080/api/sales \
-  -u admin:admin123 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "productId": 1,
-    "quantitySold": 2,
-    "priceAtSale": 75000,
-    "saleDate": "2026-03-14"
-  }'
+cp .env.example .env
+docker compose up -d
 ```
 
-Get paged sales for one product and date range:
+Stop it with:
 
 ```bash
-curl "http://localhost:8080/api/sales?page=0&size=20&productId=1&saleDateFrom=2026-01-01&saleDateTo=2026-03-31"
+docker compose down
 ```
 
-Get stock movement history:
+## Documentation and Health
+
+After startup:
+
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- Swagger UI alt path: `http://localhost:8080/swagger-ui/index.html`
+- OpenAPI: `http://localhost:8080/v3/api-docs`
+- Health: `http://localhost:8080/api/health`
+
+## Testing
+
+Run the automated test suite:
 
 ```bash
-curl "http://localhost:8080/api/stock-movements?page=0&size=20&productId=1&type=RESTOCK"
+sh ./mvnw test
 ```
 
-When a sale is created, the backend validates available stock, deducts `itemsLeft`, increments `itemsSold`, and saves the sale in a single transaction. If stock is insufficient, the API returns `409 Conflict`.
-Sales and restocks both write stock movement records so inventory-affecting changes are traceable over time.
-`Product` and `ProductInventory` responses include `createdAt` and `updatedAt`. `ProductSales` responses include `createdAt`. `StockMovement` responses include both the business event time `occurredAt` and the row creation time `createdAt`.
-Low-stock reporting is available through `GET /api/inventories/low-stock`, which returns inventories where `itemsLeft <= threshold`. The threshold defaults to `10`.
-Out-of-stock reporting is available through `GET /api/inventories/out-of-stock`, which returns inventories where `itemsLeft = 0`.
+Run the local smoke check against a running backend:
 
-Sales are immutable after creation. Generic `PUT` and `DELETE` operations are intentionally not supported.
+```bash
+sh ./smoke-test.sh
+```
 
-Inventory stock counters are not generic editable fields. `itemsSold` is driven by sales, and `itemsLeft` is changed through sales and restock operations.
-Generic `PUT /api/inventories/{id}` replacements are intentionally not supported.
+Optional overrides:
 
-Read endpoints return response DTOs instead of raw JPA entities. Inventory and sales responses include a lightweight nested `product` summary with `id` and `name`.
-List endpoints return a stable paginated DTO with `items`, `page`, `pageSize`, `totalItems`, and `totalPages`, and accept standard pagination parameters such as `page`, `size`, and `sort`.
+```bash
+BASE_URL=http://127.0.0.1:8080 \
+APP_SECURITY_USERNAME=admin \
+APP_SECURITY_PASSWORD=admin123 \
+sh ./smoke-test.sh
+```
 
-## Error Handling
+## Why This Backend Is Useful
 
-Missing resources return structured JSON error responses through the global exception handler. Request validation failures return `400 Bad Request` with field-level validation messages. For example, requesting a missing product returns `404 Not Found` with an error message and request path.
+This backend is useful as:
 
-## Future Improvements
+- a backend engineering project with real business logic
+- a full-stack API foundation for inventory dashboards
+- a clean example of transactional stock handling
+- a local-development-friendly Spring Boot service
+- a portfolio project that shows validation, authentication, pagination, and audit tracking
 
-- Replace basic auth with JWT-based authentication
-- Add explicit domain actions such as sale cancellation or returns
-- Enforce stock consistency between inventory and sales
-- Add Docker-based local setup
+## Summary
+
+Inventory Management Backend is more than a CRUD API. It provides the operational rules behind inventory workflows, including stock protection, movement history, health checks, frontend-ready pagination, local development profiles, and API documentation.
