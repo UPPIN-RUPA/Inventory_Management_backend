@@ -5,13 +5,12 @@ import jakarta.persistence.*;
 
 
 @Entity
-public class Product {
+public class Product extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
     private String category;
-    private int totalStock;
     private double price;
 
     // Default constructor
@@ -19,10 +18,9 @@ public class Product {
     }
 
     // Parameterized constructor
-    public Product(String name, String category, int totalStock, double price) {
+    public Product(String name, String category, double price) {
         this.name = name;
         this.category = category;
-        this.totalStock = totalStock;
         this.price = price;
     }
 
@@ -52,14 +50,6 @@ public class Product {
         this.category = category;
     }
 
-    public int getTotalStock() {
-        return totalStock;
-    }
-
-    public void setTotalStock(int totalStock) {
-        this.totalStock = totalStock;
-    }
-
     public double getPrice() {
         return price;
     }
@@ -68,4 +58,3 @@ public class Product {
         this.price = price;
     }
 }
-

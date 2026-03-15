@@ -4,7 +4,13 @@ package com.springboot.inventorymanagement.model;
 import jakarta.persistence.*;
 
 @Entity
-public class ProductInventory {
+@Table(
+        uniqueConstraints = @UniqueConstraint(columnNames = "product_id"),
+        indexes = {
+                @Index(name = "idx_inventory_product_id", columnList = "product_id"),
+                @Index(name = "idx_inventory_items_left", columnList = "items_left")
+        })
+public class ProductInventory extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -13,7 +19,6 @@ public class ProductInventory {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    private String category;
     private int itemsSold;
     private int itemsLeft;
 
@@ -22,9 +27,8 @@ public class ProductInventory {
     }
 
     // Parameterized constructor
-    public ProductInventory(Product product, String category, int itemsSold, int itemsLeft) {
+    public ProductInventory(Product product, int itemsSold, int itemsLeft) {
         this.product = product;
-        this.category = category;
         this.itemsSold = itemsSold;
         this.itemsLeft = itemsLeft;
     }
@@ -45,14 +49,6 @@ public class ProductInventory {
 
     public void setProduct(Product product) {
         this.product = product;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
     }
 
     public int getItemsSold() {

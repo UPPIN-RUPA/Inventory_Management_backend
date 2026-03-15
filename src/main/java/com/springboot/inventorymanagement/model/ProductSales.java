@@ -5,7 +5,11 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-public class ProductSales {
+@Table(indexes = {
+        @Index(name = "idx_sales_product_id", columnList = "product_id"),
+        @Index(name = "idx_sales_sale_date", columnList = "sale_date")
+})
+public class ProductSales extends CreatedAtEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -14,7 +18,6 @@ public class ProductSales {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    private String category;
     private int quantitySold;
     private double priceAtSale;
     private LocalDate saleDate;
@@ -24,9 +27,8 @@ public class ProductSales {
     }
 
     // Parameterized constructor
-    public ProductSales(Product product, String category, int quantitySold, double priceAtSale, LocalDate saleDate) {
+    public ProductSales(Product product, int quantitySold, double priceAtSale, LocalDate saleDate) {
         this.product = product;
-        this.category = category;
         this.quantitySold = quantitySold;
         this.priceAtSale = priceAtSale;
         this.saleDate = saleDate;
@@ -48,14 +50,6 @@ public class ProductSales {
 
     public void setProduct(Product product) {
         this.product = product;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
     }
 
     public int getQuantitySold() {
